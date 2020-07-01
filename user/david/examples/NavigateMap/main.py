@@ -63,6 +63,17 @@ def error(msg):
     sleep(1.0)
     ev3.speaker.say(msg)
 
+def displayInfo():
+    rgb = colorSensor.rgb()
+    colorStr = "R{} G{}, B{}".format(rgb[0], rgb[1], rgb[2])
+    ev3.screen.draw_text(10, 18, colorStr, text_color=Color.BLACK, background_color=Color.WHITE)
+    gyroStr = "Gyro: {}".format(gyroSensor.angle())
+    ev3.screen.draw_text(10, 36, gyroStr , text_color=Color.BLACK, background_color=Color.WHITE)
+    ultraStr = "Ultra Sonic: {}".format(ultraSensor.distance())
+    ev3.screen.draw_text(10, 54, ultraStr, text_color=Color.BLACK, background_color=Color.WHITE)
+    touchStr = "Touch: {}".format(touchSensor.pressed())
+    ev3.screen.draw_text(10, 72, touchStr, text_color=Color.BLACK, background_color=Color.WHITE)
+
 # Start the the robot and run some initial steps.
 #     Calibrate the arm motor
 #     Drive strait until the color sensor detects a non-yellow color.
@@ -88,14 +99,39 @@ def followBlackLine():
         elif (color == Color.GREEN):
             robot.drive(DRIVE_SPEED, -turnRate)
         else:
-            colorStr = "None"
-            if (color != None):
-                colorStr = "{}".format(color).replace("Color.", "")
             robot.drive(DRIVE_SLOW_SPEED, 0)
+            #colorStr = "None"
+            #if (color != None):
+            #    colorStr = "{}".format(color).replace("Color.", "")
             #error("Color {} not recognized in follow black line.".format(colorStr))
             #break
 
-start()
-followBlackLine()
+        wait(10)
 
+# Follow a line using the green intensity. Stay to the left of the green
+def followGreenLeft():
+    robot.reset()
+    PROPORTIONAL_GAIN = 14.0
+    threshold = 10
+    turnRate = 60
+    while (running):
+        displayInfo()
+        green = colorSensor.rgb()[1]
+
+        # Calculate the deviation from the threshold.
+        deviation = threshold - green
+
+        # Calculate the turn rate.
+        turnRate = PROPORTIONAL_GAIN * deviation
+
+        # Set the drive base speed and turn rate.
+        robot.drive(DRIVE_SPEED, turnRate)
+
+        # You can wait for a short time or do other things in this loop.
+        wait(10)
+
+
+start()
+#followBlackLine()
+followGreenLeft()
 stopRobot()
